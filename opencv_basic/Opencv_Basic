@@ -1,0 +1,85 @@
+//First download Opencv Library
+
+//Read and display an image in a window
+#include "opencv2/highgui/highgui.hpp" //Include file for every supported OpenCV function
+int main( int argc, char** argv ) {
+ cv::Mat img = cv::imread(argv[1],-1);
+ if( img.empty() ) return -1;
+ cv::namedWindow( "Example1", cv::WINDOW_AUTOSIZE );
+ cv::imshow( "Example1", img );
+ cv::waitKey( 0 );
+ cv::destroyWindow( "Example1" );
+ return 0;
+}
+
+
+//Read and display a vedio in a window
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+int main( int argc, char** argv ) {
+ cv::namedWindow( "Example3", cv::WINDOW_AUTOSIZE );
+ cv::VideoCapture cap;
+ cap.open( string(argv[1]) );
+ cv::Mat frame;
+ for(;;) {
+ cap >> frame;
+ if( frame.empty() ) break; // Ran out of film
+ cv::imshow( "Example3", frame );
+ if( cv::waitKey(33) >= 0 ) break;
+ }
+ return 0;
+}
+
+
+//Vedio with trackbar
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include <iostream>
+
+using namespace std;
+
+int g_slider_position = 0;
+int g_run = 1, g_dontset = 0; //start out in single step mode
+cv::VideoCapture g_cap;
+void onTrackbarSlide(int pos, void*) {
+	g_cap.set(cv::CAP_PROP_POS_FRAMES, pos);
+	if (!g_dontset) {
+		g_run = 1;
+	}
+	g_dontset = 0;
+}
+int main() {
+	cv::namedWindow("Example2_4", cv::WINDOW_NORMAL);
+	g_cap.open("C:/Users/atkal/Downloads/TestVedio.mp4");
+	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
+	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
+	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+	cout << "Video has " << frames << " frames of dimensions("
+		<< tmpw << ", " << tmph << ")." << endl;
+	cv::createTrackbar("Position", "Example2_4", &g_slider_position, frames,
+		onTrackbarSlide);
+	cv::Mat frame;
+	for (;;) {
+		if (g_run != 0) {
+			g_cap >> frame; if (frame.empty()) break;
+			int current_pos = (int)g_cap.get(cv::CAP_PROP_POS_FRAMES);
+			g_dontset = 1;
+			std::cout << "Line 39" << g_run << std::endl;
+			cv::setTrackbarPos("Position", "Example2_4", current_pos);
+			cv::imshow("Example2_4", frame);
+			g_run -= 1;
+		}
+		char c = (char)cv::waitKey(10);
+		if (c == 's') // single step
+		{
+			g_run = 1; cout << "Single step, run = " << g_run << endl;
+		}
+		if (c == 'r') // run mode
+		{
+			g_run = -1; cout << "Run mode, run = " << g_run << endl;
+		}
+		if (c == 27)
+			break;
+	}
+	return 0;
+}
